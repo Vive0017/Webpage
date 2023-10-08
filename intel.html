@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/vega@5.25.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.15.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.22.2"></script>
+</head>
+<body>
+  <div id="vis"/>
+  <script>
+    const spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.2.0.json",
+  "config": {"view": {"continuousHeight": 500, "continuousWidth": 500}},
+  "hconcat": [
+    {
+      "title": {"text": "Chronic Diseases (Click on legend to isolate gender)"},
+      "width": 500,
+      "height": 500,
+      "data": {
+        "url": "https://raw.githubusercontent.com/Vive0017/AustraliaIncome/main/chronic3.csv"
+      },
+      "layer": [
+        {
+          "selection": {
+            "continent_highlight": {
+              "type": "multi",
+              "fields": ["Category"],
+              "bind": "legend"
+            }
+          },
+          "mark": {"type": "bar", "tooltip": true},
+          "encoding": {
+            "y": {"field": "Percentage", "type": "quantitative"},
+            "x": {"field": "Disease", "type": "nominal"},
+            "xOffset": {"field": "Category"},
+            "color": {"field": "Category"},
+            "opacity": {
+              "condition": {"selection": "continent_highlight", "value": 1},
+              "value": 0.2
+            }
+          }
+        },
+        {
+          "mark": {
+            "type": "text",
+            "align": "right",
+            "baseline": "bottom",
+            "fontSize": 12,
+            "fontStyle": "bold"
+          },
+          "transform": [
+            {
+              "calculate": "'The most prevalent chronic ilness is back problems for women at ' + datum.Percentage + '%'",
+              "as": "annotation"
+            }
+          ],
+          "encoding": {
+            "y": {"field": "Percentage", "type": "quantitative"},
+            "x": {"field": "Disease", "type": "nominal"},
+            "text": {"field": "annotation", "type": "nominal"},
+            "color": {"value": "black"},
+            "opacity": {
+              "condition": {
+                "test": "datum['Category'] == 'Females' && datum['Disease']=='Back problems (dorsopathies)(e)'",
+                "value": 1
+              },
+              "value": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "title": "Median Income in Australia by LGA",
+      "data": {
+        "name": "b",
+        "url": "https://raw.githubusercontent.com/Vive0017/AustraliaLGA/main/LGA_2023_AUST_GDA2020.json",
+        "format": {"type": "topojson", "feature": "LGA_2023_AUST_GDA2020"}
+      },
+      "transform": [
+        {
+          "lookup": "properties.LGA_NAME23",
+          "from": {
+            "data": {
+              "url": "https://raw.githubusercontent.com/Vive0017/AustraliaIncome/main/LGAIncome1.csv"
+            },
+            "key": "LGA_NAME23",
+            "fields": ["Income"]
+          }
+        },
+        {"calculate": "(datum.Income+0)/10", "as": "Income"}
+      ],
+      "mark": {"type": "geoshape"},
+      "encoding": {
+        "color": {
+          "field": "Income",
+          "type": "quantitative",
+          "scale": {"type": "linear"}
+        },
+        "tooltip": [
+          {"field": "properties.LGA_NAME23", "type": "nominal", "title": "LGA"},
+          {"field": "Income", "type": "quantitative"}
+        ]
+      }
+    }
+  ]
+};
+    vegaEmbed("#vis", spec, {mode: "vega-lite"}).then(console.log).catch(console.warn);
+  </script>
+</body>
+</html>
